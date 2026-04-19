@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: movies
+    // Document ID: auto-generated
+    // Fields:
+    //   - title: string (required)
+    //   - description: string
+    //   - category: string (required)
+    //   - videoUrl: string (required, URL)
+    //   - thumbnailUrl: string (required, URL)
+    //   - downloadUrl: string (URL)
+    //   - duration: string
+    //   - releaseYear: number
+    //   - rating: string
+    //   - views: number
+    //   - order: number (required)
+    //   - createdAt: timestamp
+    //   - uploadedBy: string (UID)
+    //
+    // Collection: users
+    // Document ID: userId (UID)
+    // Fields:
+    //   - email: string (required)
+    //   - role: string (required, ['admin', 'viewer'])
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "djseratto28@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMovie(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.category is string &&
+             data.videoUrl is string &&
+             data.thumbnailUrl is string &&
+             data.order is number &&
+             (!('vj' in data) || data.vj is string) &&
+             (!('quality' in data) || data.quality is string) &&
+             (!('description' in data) || (data.description is string && data.description.size() < 2000)) &&
+             (!('views' in data) || data.views is number);
+    }
+
+    function isValidUser(data) {
+      return data.email is string && data.role in ['admin', 'viewer'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /movies/{movieId} {
+      // User explicitly asked for "anybody can come and watch"
+      allow read: if true; 
+      
+      // Only admin can manage movies
+      allow create: if isAdmin() && isValidMovie(request.resource.data);
+      allow update: if (isAdmin() && isValidMovie(request.resource.data)) || 
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])); // Allow public view increment? Or just admin
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'viewer') || isAdmin();
+    }
+  }
+}

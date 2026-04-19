@@ -1,0 +1,9 @@
+{
+  "name": "B-VIDEOS",
+  "description": "Premium Luganda movie platform. Watch, stream, and download the latest cinematic releases with VJ translations.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "Movie": {
+      "title": "Movie",
+      "description": "Metadata for a movie available on the platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the movie" },
+        "description": { "type": "string", "description": "Short synopsis of the movie" },
+        "category": { "type": "string", "description": "Genre/Category (e.g., Action, Drama)" },
+        "videoUrl": { "type": "string", "format": "url", "description": "URL to the streamable video file or embed code" },
+        "thumbnailUrl": { "type": "string", "format": "url", "description": "URL to the movie cover image" },
+        "downloadUrl": { "type": "string", "format": "url", "description": "URL for downloading the movie" },
+        "duration": { "type": "string", "description": "Duration (e.g., 2h 15m)" },
+        "releaseYear": { "type": "number", "description": "Year the movie was released" },
+        "rating": { "type": "string", "description": "Age rating (e.g., PG-13)" },
+        "vj": { "type": "string", "description": "The VJ who translated the movie (e.g., VJ Emmy, VJ Junior)" },
+        "quality": { "type": "string", "description": "Video quality (e.g., HD, 4K, HDR)" },
+        "views": { "type": "number", "description": "Number of views" },
+        "order": { "type": "number", "description": "Display order priority" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "uploadedBy": { "type": "string", "description": "UID of the admin who uploaded the movie" }
+      },
+      "required": ["title", "videoUrl", "thumbnailUrl", "category", "order"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with role management",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "viewer"] }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Public movies collection"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles for role-based access"
+    }
+  }
+}
